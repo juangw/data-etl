@@ -1,8 +1,10 @@
 package main.scala.utils
 
+import scala.io.{Source}
+
 class CsvReader {
-  def readCsv() {
-    val bufferedSource = io.Source.fromFile("./data/ACSDP1Y2010.DP04_data_with_overlays_2020-10-02T231835.csv")
+  def readCsv(): Unit = {
+    val bufferedSource = Source.fromFile("./data/ACSDP1Y2010.DP04_data_with_overlays_2020-10-02T231835.csv")
     for (line <- bufferedSource.getLines) {
       val cols = line.split(",").map(_.trim)
       // do whatever you want with the columns here
