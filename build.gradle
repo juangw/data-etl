@@ -14,6 +14,8 @@ plugins {
     id 'java-library'
 }
 
+group 'etl'
+
 repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
@@ -21,16 +23,22 @@ repositories {
 }
 
 dependencies {
-    // Use Scala 2.13 in our library project
-    compile group: 'org.scala-lang', name: 'scala-library', version: '2.12.12'
-    compile group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.0.1'
-    compile group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.0.1'
+    // Use Scala 2.12 in our library project
+    implementation group: 'org.scala-lang', name: 'scala-library', version: scalaVersion
+    implementation group: 'org.apache.spark', name: 'spark-core_2.11', version: sparkVersion
+    implementation group: 'org.apache.spark', name: 'spark-sql_2.11', version: sparkVersion
 
     // Use Scalatest for testing our library
-    testImplementation 'junit:junit:null'
-    testCompile group: 'org.scalatest', name: 'scalatest_2.13', version: '3.2.2'
-    testCompile group: 'org.scalatestplus.play', name: 'scalatestplus-play_2.13', version: '4.0.3'
+//    testImplementation 'junit:junit:null'
+//    testCompile group: 'org.scalatest', name: 'scalatest_2.13', version: '3.2.2'
+//    testCompile group: 'org.scalatestplus.play', name: 'scalatestplus-play_2.13', version: '4.0.3'
 
     // Need scala-xml at test runtime
-    compile group: 'org.scala-lang.modules', name: 'scala-xml_2.13', version: '1.2.0'
+//    compile group: 'org.scala-lang.modules', name: 'scala-xml_2.13', version: '1.2.0'
+}
+
+task run(type: JavaExec, dependsOn: classes) {
+    main = mainClassFile
+    classpath sourceSets.main.runtimeClasspath
+    classpath configurations.runtime
 }
