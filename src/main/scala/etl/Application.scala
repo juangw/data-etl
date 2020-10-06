@@ -18,7 +18,8 @@ object Application extends App {
   init
 
   var reader = new DataReader(spark)
-  var dataFrame = reader.readCsv("./data/Definitive_Healthcare%3A_USA_Hospital_Beds.csv")
+  var dataFrame =
+    reader.readCsv("./data/Definitive_Healthcare%3A_USA_Hospital_Beds.csv")
 
   dataFrame.show(2)
 }
