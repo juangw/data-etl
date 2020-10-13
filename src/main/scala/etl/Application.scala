@@ -13,5 +13,7 @@ object Application extends App {
   val extractor = new Extractor(spark)
   var results = extractor.extract()
 
-  results { 0 }.dataset.filter(results { 0 }.dataset("HQ_STATE").equalTo("MI")).show()
+  for (result <- results) {
+    println(result)
+  }
 }

@@ -10,25 +10,23 @@ class Extractor(spark: SparkSession) {
     val parser = new DataParser(spark)
     val config = ConfigFactory.load("application.conf")
     val datasetInfo = config.getObjectList("datasetInfo")
-    val results = List(Dataset)
+    val datasetsLength = datasetInfo.size()
+    var results = List[Dataset]()
 
-    for (dataset <- datasetInfo.toArray()) {
+    for (x <- 0 to datasetsLength - 1) {
       val configData = Map(
-        "name" -> dataset.get("name"),
-        "type" -> dataset.get("type"),
-        "location" -> dataset.get("location")
+        "name" -> datasetInfo.get(x).get("name").unwrapped().toString(),
+        "type" -> datasetInfo.get(x).get("type").unwrapped().toString(),
+        "location" -> datasetInfo.get(x).get("location").unwrapped().toString()
       )
-      if (configData === "csv") {
-        val data =
-          Dataset(configData {
-            "name"
-          }, parser.parseCsv(configData {
-            "location"
-          }))
-        results :+ data
+      if (configData.getOrElse("type", "") == "csv") {
+        val data = Dataset(
+          configData.getOrElse("name", ""),
+          parser.parseCsv(configData.getOrElse("location", "")))
+        results ::= data
       } else {
         val data = Dataset("Test", parser.parseJson(List("test")))
-        results :+ data
+        results ::= data
       }
     }
 
