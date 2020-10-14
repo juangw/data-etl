@@ -12,10 +12,12 @@ class DataParser(spark: SparkSession) {
       .csv(fileName)
   }
 
-  def parseJson(mapper: ObjectMapper, dataList: List[Map[String, Any]]): DataFrame = {
+  def parseJson(mapper: ObjectMapper,
+                dataList: List[Map[String, Any]]): DataFrame = {
     var jsonList = List[String]()
     for (data <- dataList) {
-      val jsonResult = mapper.writerWithDefaultPrettyPrinter.writeValueAsString(data)
+      val jsonResult =
+        mapper.writerWithDefaultPrettyPrinter.writeValueAsString(data)
       jsonList ::= jsonResult
     }
     val data = spark.sparkContext.parallelize(jsonList)

@@ -33,11 +33,12 @@ class Extractor(spark: SparkSession) {
           parser.parseCsv(configData.getOrElse("location", "")))
         results ::= data
       } else {
-        val url = "http://www.communitybenefitinsight.org/api/get_hospitals.php?"
+        val url =
+          "http://www.communitybenefitinsight.org/api/get_hospitals.php?"
         val client = HttpClients.createDefault()
-        val getFlowInfo:HttpGet = new HttpGet(url)
+        val getFlowInfo: HttpGet = new HttpGet(url)
 
-        val response:CloseableHttpResponse = client.execute(getFlowInfo)
+        val response: CloseableHttpResponse = client.execute(getFlowInfo)
         val entity = response.getEntity
         val jsonString = EntityUtils.toString(entity)
         val mappedData = mapper.readValue[List[Map[String, Any]]](jsonString)
