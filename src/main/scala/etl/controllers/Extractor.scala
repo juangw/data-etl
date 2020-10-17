@@ -25,16 +25,28 @@ class Extractor(spark: SparkSession) {
       val configData = Map(
         "name" -> datasetInfo.get(x).get("name").unwrapped().toString(),
         "type" -> datasetInfo.get(x).get("type").unwrapped().toString(),
-        "location" -> datasetInfo.get(x).get("location").unwrapped().toString()
+        "location" -> datasetInfo.get(x).get("location").unwrapped().toString(),
+        "joinColumn" -> datasetInfo
+          .get(x)
+          .get("joinColumn")
+          .unwrapped()
+          .toString(),
+        "transformations" -> datasetInfo
+          .get(x)
+          .get("transformations")
+          .unwrapped()
+          .toString()
       )
       if (configData.getOrElse("type", "") == "csv") {
         val data = Dataset(
           configData.getOrElse("name", ""),
-          parser.parseCsv(configData.getOrElse("location", "")))
+          configData.getOrElse("joinColumn", ""),
+          parser.parseCsv(configData.getOrElse("location", "")),
+          configData.getOrElse("transformations", "").split(",")
+        )
         results ::= data
       } else {
-        val url =
-          "http://www.communitybenefitinsight.org/api/get_hospitals.php?"
+        val url = configData.getOrElse("location", "")
         val client = HttpClients.createDefault()
         val getFlowInfo: HttpGet = new HttpGet(url)
 
@@ -42,7 +54,12 @@ class Extractor(spark: SparkSession) {
         val entity = response.getEntity
         val jsonString = EntityUtils.toString(entity)
         val mappedData = mapper.readValue[List[Map[String, Any]]](jsonString)
-        val data = Dataset("HospitalAPI", parser.parseJson(mapper, mappedData))
+        val data = Dataset(
+          configData.getOrElse("name", ""),
+          configData.getOrElse("joinColumn", ""),
+          parser.parseJson(mapper, mappedData),
+          configData.getOrElse("transformations", "").split(",")
+        )
         results ::= data
       }
     }

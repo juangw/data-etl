@@ -1,7 +1,7 @@
 package etl
 
 import etl.utils.ApplicationLogger
-import etl.controllers.Extractor
+import etl.controllers.{Extractor, Transformer}
 
 import org.apache.spark.sql.SparkSession
 
@@ -11,9 +11,8 @@ object Application extends App {
   val logger = new ApplicationLogger(sc).initLogger()
 
   val extractor = new Extractor(spark)
-  var results = extractor.extract()
+  var datasets = extractor.extract()
 
-  for (result <- results) {
-    println(result)
-  }
+  val transformer = new Transformer(datasets)
+  var transformedDatasets = transformer.transform()
 }
