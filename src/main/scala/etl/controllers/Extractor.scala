@@ -2,6 +2,7 @@ package etl.controllers
 
 import etl.utils.DataParser
 import etl.models.Dataset
+import etl.utils.LogHelper
 import org.apache.spark.sql.SparkSession
 import com.typesafe.config.ConfigFactory
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet}
@@ -11,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
-class Extractor(spark: SparkSession) {
+class Extractor(spark: SparkSession) extends LogHelper {
   def extract(): List[Dataset] = {
     val parser = new DataParser(spark)
     val mapper = new ObjectMapper() with ScalaObjectMapper
@@ -37,33 +38,37 @@ class Extractor(spark: SparkSession) {
           .unwrapped()
           .toString()
       )
-      if (configData.getOrElse("type", "") == "csv") {
-        val data = Dataset(
-          configData.getOrElse("name", ""),
-          configData.getOrElse("joinColumn", ""),
-          parser.parseCsv(configData.getOrElse("location", "")),
-          configData.getOrElse("transformations", "").split(",")
-        )
-        results ::= data
-      } else {
-        val url = configData.getOrElse("location", "")
-        val client = HttpClients.createDefault()
-        val getFlowInfo: HttpGet = new HttpGet(url)
+      val datasetType = configData.getOrElse("type", "")
+      datasetType match {
+        case "csv" => {
+          val data = Dataset(
+            configData.getOrElse("name", ""),
+            configData.getOrElse("joinColumn", ""),
+            parser.parseCsv(configData.getOrElse("location", "")),
+            configData.getOrElse("transformations", "").split(",")
+          )
+          results ::= data
+        }
+        case "api" => {
+          val url = configData.getOrElse("location", "")
+          val client = HttpClients.createDefault()
+          val getFlowInfo: HttpGet = new HttpGet(url)
 
-        val response: CloseableHttpResponse = client.execute(getFlowInfo)
-        val entity = response.getEntity
-        val jsonString = EntityUtils.toString(entity)
-        val mappedData = mapper.readValue[List[Map[String, Any]]](jsonString)
-        val data = Dataset(
-          configData.getOrElse("name", ""),
-          configData.getOrElse("joinColumn", ""),
-          parser.parseJson(mapper, mappedData),
-          configData.getOrElse("transformations", "").split(",")
-        )
-        results ::= data
+          val response: CloseableHttpResponse = client.execute(getFlowInfo)
+          val entity = response.getEntity
+          val jsonString = EntityUtils.toString(entity)
+          val mappedData = mapper.readValue[List[Map[String, Any]]](jsonString)
+          val data = Dataset(
+            configData.getOrElse("name", ""),
+            configData.getOrElse("joinColumn", ""),
+            parser.parseJson(mapper, mappedData),
+            configData.getOrElse("transformations", "").split(",")
+          )
+          results ::= data
+        }
+        case _ => logger.error("Invalid dataset type provided")
       }
     }
-
     results
   }
 }
